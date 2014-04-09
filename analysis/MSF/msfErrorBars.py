@@ -9,7 +9,7 @@ import math
 import MDAnalysis.KDTree.NeighborSearch as NS 
 
 f=open('250_d_m_rmsd.dat', 'w')
-
+print "bla"
 #pdb="/home/sterpone_team/katava/results/disulfide/solution/2lym_dis_run.pdb"
 #psf="/home/sterpone_team/katava/results/disulfide/solution/2lym_dis_run.psf"
 #dcd1="/home/sterpone_team/katava/results/disulfide/solution/250.production.4.dcd"
