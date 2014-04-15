@@ -25,7 +25,14 @@ def average_positions(lenc, fixedWindowWidth, x_avg, y_avg, z_avg, x_a, y_a, z_a
         finalval+=1.0/3.0*(x_a[j]-x_avg[j]+y_a[j]-y_avg[j]+z_a[j]-z_avg[j])
     return finalval
 
-def msf_win(begin, end, fixedWindowWidth, lenH, H_Catoms, u1, u2, selection):
+def msf_win(begin, end, fixedWindowWidth, u1, u2, selection):
+    segment=u2.selectAtoms("segid %s" %(selection[0:1]))
+    hy = segment.selectAtoms("name H*")
+    car = segment.selectAtoms("name C*")
+    ns_hy=NS.AtomNeighborSearch(hy)
+    H_Catoms=ns_hy.search_list(car, 1.5)
+    lenH=len(H_Catoms)
+                                            
     print 'msfwin begin end', begin, end
     x_avg=[0]*lenH
     y_avg=[0]*lenH
@@ -55,7 +62,7 @@ def msf_win(begin, end, fixedWindowWidth, lenH, H_Catoms, u1, u2, selection):
         protein+=win_avg
     return protein/float(len(selection)) 
 
-def blocksum(blocklen, fixedWindowWidth, begin, lenH, H_Catoms, u1, u2, selection):
+def blocksum(blocklen, fixedWindowWidth, begin, u1, u2, selection):
     blocks=0
     count=0
     for i in range(begin, (((begin+blocklen)/fixedWindowWidth))*fixedWindowWidth, fixedWindowWidth):
@@ -64,7 +71,7 @@ def blocksum(blocklen, fixedWindowWidth, begin, lenH, H_Catoms, u1, u2, selectio
         end=i+fixedWindowWidth
         #print 'blocksum begin end', begin, end
         #print 'begin end', begin, end
-        blocks+=msf_win(begin, end, fixedWindowWidth, lenH, H_Catoms, u1, u2, selection)
+        blocks+=msf_win(begin, end, fixedWindowWidth, u1, u2, selection)
     #print 'blocks before division', blocks
     blocks/=float(count)
     #print ' blocks/count', blocks
@@ -74,42 +81,29 @@ def blocksum(blocklen, fixedWindowWidth, begin, lenH, H_Catoms, u1, u2, selectio
 
 
 def main():
-    pdb="2lym_wbi.pdb"
-    psf="2lym_wbi.psf"
+    pdb="2lym_dis_run.pdb"
+    psf="2lym_dis_run.psf"
+    #pdb="2lym_wbi.pdb"
+    #psf="2lym_wbi.psf"
     #dcd="1000.dcd"
-    dcd="250.production.2.dcd"
+    dcd1="250.production.4.dcd"
+    dcd2="250.production.5.dcd"
     f=open('analysis.dat', 'w') 
 
     u1 = MDAnalysis.Universe(pdb)
-    u2 = MDAnalysis.Universe(psf, dcd)
+    u2 = MDAnalysis.Universe(psf, [dcd1, dcd2])
+    #u2 = MDAnalysis.Universe(psf, dcd)
     print len(u2.trajectory)
     
     fixedWindowWidth=300
     begin=0
-    blocklen=1000
-    selection='U'
+    blocklen=10000
+    selection='A'
 
-    protsum=0
-    for i in selection:
-        segment=u2.selectAtoms("segid %s" %(i))
-        #print(segment)
-        hy = segment.selectAtoms("name H*")
-        car = segment.selectAtoms("name C*")
-        ns_hy=NS.AtomNeighborSearch(hy)
-        H_Catoms=ns_hy.search_list(car, 1.5)
-        #coord=H_Catoms.atoms.coordinates()
-        #print len(coord), len(coord)
-        lenH=len(H_Catoms)
-        ref = u1.selectAtoms("segid %s" %(i))
-        trj = u2.selectAtoms("segid %s" %(i))
-        
-        sumtraj=0
-        #print msf_win(begin, end, ref, trj, fixedWindowWidth, lenH, H_Catoms, u1, u2)
-        #print blocksum(blocklen, fixedWindowWidth, begin)
-        for i in range(0, (len(u2.trajectory)/blocklen)*blocklen, blocklen):
-            begin=i
-            #print 'final begin, end', begin
-            print >> f, blocksum(blocklen, fixedWindowWidth, begin, lenH, H_Catoms, u1, u2, selection)
+    for i in range(0, (len(u2.trajectory)/blocklen)*blocklen, blocklen):
+        begin=i
+        #print 'final begin, end', begin
+        print >> f, blocksum(blocklen, fixedWindowWidth, begin, u1, u2, selection)
 
 if __name__ == "__main__":
     main()
