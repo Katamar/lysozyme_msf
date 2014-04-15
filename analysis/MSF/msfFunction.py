@@ -41,6 +41,20 @@ def msf_win(begin, end, ref, trj, fixedWindowWidth, lenH, H_Catoms, u1, u2):
    win_avg/=float(len(coord))
    return win_avg 
 
+def blocksum(blocklen, fixedWindowWidth, begin, end, ref, trj, lenH, H_Catoms, u1, u2):
+    blocks=0
+    count=0
+    for i in range(begin, begin+blocklen, fixedWindowWidth):
+        count+=1
+        begin=i
+        end=i+fixedWindowWidth
+        #print 'begin end', begin, end
+        blocks+=msf_win(begin, end, ref, trj, fixedWindowWidth, lenH, H_Catoms, u1, u2)
+    #print 'blocks before division', blocks
+    blocks/=float(count)
+    #print ' blocks/count', blocks
+    return blocks
+
 
 def main():
     pdb="2lym_wbi.pdb"
@@ -51,10 +65,11 @@ def main():
     u2 = MDAnalysis.Universe(psf, dcd)
     print len(u2.trajectory)
     
-    fixedWindowWidth=3
+    fixedWindowWidth=2
     begin=0
     end=begin+fixedWindowWidth
-    
+    blocklen=4
+
     for i in 'U':
         segment=u2.selectAtoms("segid %s" %(i))
         #print(segment)
@@ -68,8 +83,10 @@ def main():
         ref = u1.selectAtoms("segid %s" %(i))
         trj = u2.selectAtoms("segid %s" %(i))
         
-        print msf_win(begin, end, ref, trj, fixedWindowWidth, lenH, H_Catoms, u1, u2)
-
+        
+        #print msf_win(begin, end, ref, trj, fixedWindowWidth, lenH, H_Catoms, u1, u2)
+        #print blocksum(blocklen, fixedWindowWidth, begin)
+        blocksum(blocklen, fixedWindowWidth, begin, end, ref, trj, lenH, H_Catoms, u1, u2)
 
 if __name__ == "__main__":
     main()
