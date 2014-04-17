@@ -31,18 +31,20 @@ def msf_win(begin, end, fixedWindowWidth, u1, u2, selection):
     car = segment.selectAtoms("name C*")
     ns_hy=NS.AtomNeighborSearch(hy)
     H_Catoms=ns_hy.search_list(car, 1.5)
+    #print segment
     lenH=len(H_Catoms)
-                                            
-    print 'msfwin begin end', begin, end
-    x_avg=[0]*lenH
-    y_avg=[0]*lenH
-    z_avg=[0]*lenH
-    x_a=[0]*lenH
-    y_a=[0]*lenH
-    z_a=[0]*lenH
-    finalval=0
+    #print lenH                                        
+    #print 'msfwin begin end', begin, end
     protein=0                     
     for i in selection:
+        x_avg=[0]*lenH
+        y_avg=[0]*lenH
+        z_avg=[0]*lenH
+        x_a=[0]*lenH
+        y_a=[0]*lenH
+        z_a=[0]*lenH
+        finalval=0
+
         segment=u2.selectAtoms("segid %s" %(i))
         hy = segment.selectAtoms("name H*")
         car = segment.selectAtoms("name C*")
@@ -59,46 +61,50 @@ def msf_win(begin, end, fixedWindowWidth, u1, u2, selection):
             accumulate_positions(len(coord), coord, x_avg, y_avg, z_avg, x_a, y_a, z_a)
         win_avg=average_positions(len(coord), fixedWindowWidth, x_avg, y_avg, z_avg, x_a, y_a, z_a)
         win_avg/=float(len(coord))
+        print win_avg
         protein+=win_avg
     return protein/float(len(selection)) 
 
 def blocksum(blocklen, fixedWindowWidth, begin, u1, u2, selection):
     blocks=0
     count=0
-    for i in range(begin, (((begin+blocklen)/fixedWindowWidth))*fixedWindowWidth, fixedWindowWidth):
+    print 'range in a block', begin, begin+(blocklen/fixedWindowWidth)*fixedWindowWidth 
+    for i in range(begin, begin+(blocklen/fixedWindowWidth)*fixedWindowWidth, fixedWindowWidth):
         count+=1
         begin=i
         end=i+fixedWindowWidth
         #print 'blocksum begin end', begin, end
-        #print 'begin end', begin, end
+        print 'begin end', begin, end
         blocks+=msf_win(begin, end, fixedWindowWidth, u1, u2, selection)
-    #print 'blocks before division', blocks
+    print 'blocks before division', blocks
     blocks/=float(count)
-    #print ' blocks/count', blocks
+    print ' blocks/count', blocks
     return blocks
 
 
 
 
 def main():
-    pdb="2lym_dis_run.pdb"
-    psf="2lym_dis_run.psf"
-    #pdb="2lym_wbi.pdb"
-    #psf="2lym_wbi.psf"
-    #dcd="1000.dcd"
-    dcd1="250.production.4.dcd"
-    dcd2="250.production.5.dcd"
-    f=open('analysis.dat', 'w') 
+    #pdb="2lym_dis_run.pdb"
+    #psf="2lym_dis_run.psf"
+    pdb="unwrapped_disulfide_run.pdb"
+    psf="unwrapped_disulfide_run.psf"
+    dcd1="u.250.production.4.dcd"
+    dcd2="u.250.production.5.dcd"
+    dcd="powtraj.dcd"
+    #dcd1="250.production.4.dcd"
+    #dcd2="250.production.5.dcd"
+    f=open('pow_250.dat', 'w') 
 
     u1 = MDAnalysis.Universe(pdb)
     u2 = MDAnalysis.Universe(psf, [dcd1, dcd2])
-    #u2 = MDAnalysis.Universe(psf, dcd)
+    #u2 = MDAnalysis.Universe(psf, dcd1)
     print len(u2.trajectory)
     
     fixedWindowWidth=300
     begin=0
-    blocklen=10000
-    selection='A'
+    blocklen=20000
+    selection='ABCDEFGH'
 
     for i in range(0, (len(u2.trajectory)/blocklen)*blocklen, blocklen):
         begin=i
