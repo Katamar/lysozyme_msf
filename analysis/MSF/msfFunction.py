@@ -31,10 +31,7 @@ def msf_win(begin, end, fixedWindowWidth, u1, u2, selection):
     car = segment.selectAtoms("name C*")
     ns_hy=NS.AtomNeighborSearch(hy)
     H_Catoms=ns_hy.search_list(car, 1.5)
-    #print segment
     lenH=len(H_Catoms)
-    #print lenH                                        
-    #print 'msfwin begin end', begin, end
     protein=0                     
     for i in selection:
         x_avg=[0]*lenH
@@ -61,45 +58,33 @@ def msf_win(begin, end, fixedWindowWidth, u1, u2, selection):
             accumulate_positions(len(coord), coord, x_avg, y_avg, z_avg, x_a, y_a, z_a)
         win_avg=average_positions(len(coord), fixedWindowWidth, x_avg, y_avg, z_avg, x_a, y_a, z_a)
         win_avg/=float(len(coord))
-        print win_avg
         protein+=win_avg
     return protein/float(len(selection)) 
 
 def blocksum(blocklen, fixedWindowWidth, begin, u1, u2, selection):
     blocks=0
     count=0
-    print 'range in a block', begin, begin+(blocklen/fixedWindowWidth)*fixedWindowWidth 
     for i in range(begin, begin+(blocklen/fixedWindowWidth)*fixedWindowWidth, fixedWindowWidth):
         count+=1
         begin=i
         end=i+fixedWindowWidth
-        #print 'blocksum begin end', begin, end
-        print 'begin end', begin, end
         blocks+=msf_win(begin, end, fixedWindowWidth, u1, u2, selection)
-    print 'blocks before division', blocks
     blocks/=float(count)
-    print ' blocks/count', blocks
     return blocks
 
 
 
 
 def main():
-    #pdb="2lym_dis_run.pdb"
-    #psf="2lym_dis_run.psf"
     pdb="unwrapped_disulfide_run.pdb"
     psf="unwrapped_disulfide_run.psf"
     dcd1="u.250.production.4.dcd"
     dcd2="u.250.production.5.dcd"
     dcd="powtraj.dcd"
-    #dcd1="250.production.4.dcd"
-    #dcd2="250.production.5.dcd"
     f=open('pow_250.dat', 'w') 
 
     u1 = MDAnalysis.Universe(pdb)
     u2 = MDAnalysis.Universe(psf, [dcd1, dcd2])
-    #u2 = MDAnalysis.Universe(psf, dcd1)
-    print len(u2.trajectory)
     
     fixedWindowWidth=300
     begin=0
@@ -108,7 +93,6 @@ def main():
 
     for i in range(0, (len(u2.trajectory)/blocklen)*blocklen, blocklen):
         begin=i
-        #print 'final begin, end', begin
         print >> f, blocksum(blocklen, fixedWindowWidth, begin, u1, u2, selection)
 
 if __name__ == "__main__":
