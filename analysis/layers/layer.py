@@ -13,7 +13,7 @@ def msd_win(lenH, startframe, stopframe):
     msd/=float(lenH)
     return msd
 
-def msd_block(selection, u1, u2, begin, timeframe, blocklen):
+def msd_block(selection, u1, u2, begin, timeframe, blocklen, dicsel):
     msd_bl=0
     tmpbegin=begin
     for i in selection:
@@ -24,7 +24,9 @@ def msd_block(selection, u1, u2, begin, timeframe, blocklen):
         hy=segment.selectAtoms("name H*")
         car=segment.selectAtoms("name C*")
         ns_hy=NS.AtomNeighborSearch(hy)
-        H_atoms=ns_hy.search_list(car, 1.5)
+        allH_atoms=ns_hy.search_list(car, 1.5)
+        H_atoms=allH_atoms.selectAtoms(*dicsel)
+        print H_atoms
         lenH=len(H_atoms)
         for ts in u2.trajectory[begin:begin+blocklen-timeframe+1]:         #u2.trajectory[0,3]: means 0, 1, 2 --> last one doesn't count!
             u2.trajectory[begin]
@@ -38,25 +40,12 @@ def msd_block(selection, u1, u2, begin, timeframe, blocklen):
         tmpsum/=float(blocklen-timeframe+1)    
         msd_bl+=tmpsum
     msd_bl/=float(len(selection))
-    return msd_bl
+    return msd_bl 
 
 
-def main():
-    pdb="2lym_wb.pdb"
-    ##psf="2lym_dis_run.psf"
-    #dcd="250.production.dcd"
-    #f=open('msd_monomer_250.dat', 'w')
-    u1 = MDAnalysis.Universe(pdb)
-    #u2 = MDAnalysis.Universe(psf, dcd)
-    #timeframe=300
-    #begin=0
-    #blocklen=20000
-    selection=['A']
-    #print u1
-    #for i in range(0, len(u2.trajectory)/blocklen*blocklen, blocklen):
-    #    begin=i
-    #    print >> f, msd_block(selection, u1, u2, begin, timeframe, blocklen)
-    segment=u1.selectAtoms("segid U")
+def select_layers(u1, u2, selection="A"):
+    
+    segment=u1.selectAtoms("segid A")
     hy=segment.selectAtoms("name H*")
     car=segment.selectAtoms("name C*")
     ns_hy=NS.AtomNeighborSearch(hy)
@@ -107,28 +96,7 @@ def main():
             middle.append(i)
         else:
             inner.append(i)
-
-    ###### vmd selector_conversions:
-
-    str_inner=''
-    for i in inner:
-        str_inner+=str(i)
-        str_inner+=' '
-
-    str_middle=''
-    for i in middle:
-        str_middle+=str(i)
-        str_middle+=' '
-
-    str_outer=''
-    for i in outer:
-        str_outer+=str(i)
-        str_outer+=' '
-
-    #print 'str_inner', str_inner
-    #print 'str_middle', str_middle
-    #print 'str_outer', str_outer
-
+    
     inner_selection=[]
     middle_selection=[]
     outer_selection=[]
@@ -144,16 +112,148 @@ def main():
 
     print len(inner_selection)
     inner_selection=tuple(inner_selection)
-    insel=H_atoms.selectAtoms(*inner_selection)
-    print insel
+    #insel=H_atoms.selectAtoms(*inner_selection)
+    #print insel
     print len(middle_selection)
     middle_selection=tuple(middle_selection)
-    misel=H_atoms.selectAtoms(*middle_selection) 
-    print misel
+    #misel=H_atoms.selectAtoms(*middle_selection) 
+    #print misel
     print len(outer_selection)
     outer_selection=tuple(outer_selection)
-    ousel=H_atoms.selectAtoms(*outer_selection)
-    print ousel  
+    #ousel=H_atoms.selectAtoms(*outer_selection)
+    #print ousel  
+
+    dicsel={}
+    dicsel['inner']=inner_selection
+    dicsel['middle']=middle_selection
+    dicsel['outer']=outer_selection
+    return dicsel
+
+
+def main():
+    pdb="2lym_dis_run.pdb"
+    psf="2lym_dis_run.psf"
+    dcd="shortest.dcd"
+    u1 = MDAnalysis.Universe(pdb)
+    u2 = MDAnalysis.Universe(psf, dcd)
+    #timeframe=300
+    #begin=0
+    #blocklen=20000
+    timeframe=3
+    begin=0
+    blocklen=5
+    selection=['A']
+    #segment=u1.selectAtoms("segid A")
+    #hy=segment.selectAtoms("name H*")
+    #car=segment.selectAtoms("name C*")
+    #ns_hy=NS.AtomNeighborSearch(hy)
+    #H_atoms=ns_hy.search_list(car, 1.5)
+    #water=u1.selectAtoms("segid WT1" and "name OH2")
+    
+    #Hidx=H_atoms.indices()
+    #Hpos=H_atoms.coordinates()
+    
+    #Hdic={}
+    #count=0
+    #for i in Hidx:
+    #    Hdic[i]=Hpos[count]
+    #    count+=1
+
+    #Widx=water.indices()
+    #Wpos=water.coordinates()
+    
+    #Wdic={}
+    #count2=0
+    #for j in Widx:
+    #    Wdic[j]=Wpos[count2]
+    #    count2+=1
+
+    #water_list={}
+    #for i in Hdic:
+    #    list=[]
+    #    for j in Wdic:
+    #        list.append(math.sqrt((Hdic[i][0]-Wdic[j][0])**2+(Hdic[i][1]-Wdic[j][1])**2+(Hdic[i][2]-Wdic[j][2])**2))
+    #    water_list[i]=list
+    
+    #minimum_distance={}
+    #for i in water_list:
+    #    minimum_distance[i]=min(water_list[i])
+
+    #valuemax=max(minimum_distance.values())
+    #valuemin=min(minimum_distance.values())
+
+    #d=(valuemax-valuemin)/3.0
+
+    #inner=[]
+    #middle=[]
+    #outer=[]
+    #for i in minimum_distance:
+    #    if minimum_distance[i]<=d:
+    #        outer.append(i)
+    #    elif minimum_distance[i]<=2*d:
+    #        middle.append(i)
+    #    else:
+    #        inner.append(i)
+
+    ###### vmd selector_conversions:
+
+    #str_inner=''
+    #for i in inner:
+    #    str_inner+=str(i)
+    #    str_inner+=' '
+
+    #str_middle=''
+    #for i in middle:
+    #    str_middle+=str(i)
+    #    str_middle+=' '
+
+    #str_outer=''
+    #for i in outer:
+    #    str_outer+=str(i)
+    #    str_outer+=' '
+
+    #print 'str_inner', str_inner
+    #print 'str_middle', str_middle
+    #print 'str_outer', str_outer
+
+    #inner_selection=[]
+    #middle_selection=[]
+    #outer_selection=[]
+    #for i in range(len(H_atoms.atoms)):
+    #    if H_atoms.atoms[i].number in inner:
+    #        inner_selection.append("segid %s and resid %d and name %s" %(H_atoms.atoms[i].segid,  H_atoms.atoms[i].resid,  H_atoms.atoms[i].name))
+    #    if H_atoms.atoms[i].number in middle:
+    #        middle_selection.append("segid %s and resid %d and name %s" %(H_atoms.atoms[i].segid,  H_atoms.atoms[i].resid,  H_atoms.atoms[i].name))
+    #    if H_atoms.atoms[i].number in outer:
+    #        outer_selection.append("segid %s and resid %d and name %s" %(H_atoms.atoms[i].segid,  H_atoms.atoms[i].resid,  H_atoms.atoms[i].name))
+        
+
+
+    #print len(inner_selection)
+    #inner_selection=tuple(inner_selection)
+    ##insel=H_atoms.selectAtoms(*inner_selection)
+    ##print insel
+    #print len(middle_selection)
+    #middle_selection=tuple(middle_selection)
+    ##misel=H_atoms.selectAtoms(*middle_selection) 
+    ##print misel
+    #print len(outer_selection)
+    #outer_selection=tuple(outer_selection)
+    #ousel=H_atoms.selectAtoms(*outer_selection)
+    #print ousel  
+
+    #dicsel={}
+    #dicsel['inner']=inner_selection
+    #dicsel['middle']=middle_selection
+    #dicsel['outer']=outer_selection
+    dicsel=select_layers(u1, u2)
+    for item in dicsel:
+        f=open("250_{0}.dat".format(item), 'w')
+        print len(dicsel[item])
+        #print dicsel[item]
+        for i in range(0, len(u2.trajectory)/blocklen*blocklen, blocklen):
+            begin=i
+            print >> f, msd_block(selection, u1, u2, begin, timeframe, blocklen, dicsel[item])
 
 if __name__ == '__main__':
     main()
