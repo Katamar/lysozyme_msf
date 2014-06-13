@@ -125,18 +125,18 @@ def main():
         str_outer+=str(i)
         str_outer+=' '
 
-    print 'str_inner', str_inner
-    print 'str_middle', str_middle
-    print 'str_outer', str_outer
+    #print 'str_inner', str_inner
+    #print 'str_middle', str_middle
+    #print 'str_outer', str_outer
 
-    #water_distance={}
-    #for i in Hdic:
-    #    for j in Wdic:
-    #        water_distance[i]=math.sqrt((Hdic[i][0]-Wdic[j][0])**2+(Hdic[i][1]-Wdic[j][1])**2+(Hdic[i][2]-Wdic[j][2])**2)
+    inner_selection=''
+    for i in range(len(H_atoms.atoms)):
+        if H_atoms.atoms[i].number in inner:
+            inner_selection+='"segid %s and resid %d and name %s"' %(H_atoms.atoms[i].segid,  H_atoms.atoms[i].resid,  H_atoms.atoms[i].name)
+            if H_atoms.atoms[i].number!=inner[-1]:
+                inner_selection+=" , "
 
-
-    #print Hdic.keys(), Hdic.values()
-       
+    print inner_selection 
 if __name__ == '__main__':
     main()
 
