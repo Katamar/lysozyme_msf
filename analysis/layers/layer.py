@@ -129,14 +129,32 @@ def main():
     #print 'str_middle', str_middle
     #print 'str_outer', str_outer
 
-    inner_selection=''
+    inner_selection=[]
+    middle_selection=[]
+    outer_selection=[]
     for i in range(len(H_atoms.atoms)):
         if H_atoms.atoms[i].number in inner:
-            inner_selection+='"segid %s and resid %d and name %s"' %(H_atoms.atoms[i].segid,  H_atoms.atoms[i].resid,  H_atoms.atoms[i].name)
-            if H_atoms.atoms[i].number!=inner[-1]:
-                inner_selection+=" , "
+            inner_selection.append("segid %s and resid %d and name %s" %(H_atoms.atoms[i].segid,  H_atoms.atoms[i].resid,  H_atoms.atoms[i].name))
+        if H_atoms.atoms[i].number in middle:
+            middle_selection.append("segid %s and resid %d and name %s" %(H_atoms.atoms[i].segid,  H_atoms.atoms[i].resid,  H_atoms.atoms[i].name))
+        if H_atoms.atoms[i].number in outer:
+            outer_selection.append("segid %s and resid %d and name %s" %(H_atoms.atoms[i].segid,  H_atoms.atoms[i].resid,  H_atoms.atoms[i].name))
+        
 
-    print inner_selection 
+
+    print len(inner_selection)
+    inner_selection=tuple(inner_selection)
+    insel=H_atoms.selectAtoms(*inner_selection)
+    print insel
+    print len(middle_selection)
+    middle_selection=tuple(middle_selection)
+    misel=H_atoms.selectAtoms(*middle_selection) 
+    print misel
+    print len(outer_selection)
+    outer_selection=tuple(outer_selection)
+    ousel=H_atoms.selectAtoms(*outer_selection)
+    print ousel  
+
 if __name__ == '__main__':
     main()
 
