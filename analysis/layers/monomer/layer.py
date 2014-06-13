@@ -18,7 +18,6 @@ def msd_block(selection, u1, u2, begin, timeframe, blocklen, temp):
     tmpbegin=begin
     for i in selection:
         listi={}
-        print i
         dicsel=select_layers(u1, u2, "%s" %(i))
         for item in dicsel:
             tmpsum=0
@@ -31,7 +30,6 @@ def msd_block(selection, u1, u2, begin, timeframe, blocklen, temp):
             allH_atoms=ns_hy.search_list(car, 1.5)
             H_atoms=allH_atoms.selectAtoms(*dicsel[item])
             lenH=len(H_atoms)
-            print lenH
             for ts in u2.trajectory[begin:begin+blocklen-timeframe+1]:         #u2.trajectory[0,3]: means 0, 1, 2 --> last one doesn't count!
                 u2.trajectory[begin]
                 AL.alignto(segment, ref, select="name CA")
