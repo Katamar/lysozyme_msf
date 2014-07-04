@@ -13,13 +13,13 @@ def msd_win(lenH, startframe, stopframe):
     msd/=float(lenH)
     return msd
 
-def msd_block(selection, u1, u2, begin, timeframe, blocklen):
+def msd_block(selection, u1, u2, begin, timeframe, blocklen, layercounter):
     msd_bl=[0]*3
+    msd_bl_weighted_average=[0]*3
     tmpbegin=begin
     for i in selection:
         listi={}
-        print i
-        dicsel=select_layers(u1, u2, i="A")
+        dicsel=select_layers(u1, u2, "%s" %(i))
         for item in dicsel:
             tmpsum=0
             begin=tmpbegin
@@ -31,7 +31,6 @@ def msd_block(selection, u1, u2, begin, timeframe, blocklen):
             allH_atoms=ns_hy.search_list(car, 1.5)
             H_atoms=allH_atoms.selectAtoms(*dicsel[item])
             lenH=len(H_atoms)
-            print lenH
             for ts in u2.trajectory[begin:begin+blocklen-timeframe+1]:         #u2.trajectory[0,3]: means 0, 1, 2 --> last one doesn't count!
                 u2.trajectory[begin]
                 AL.alignto(segment, ref, select="name CA")
@@ -41,20 +40,29 @@ def msd_block(selection, u1, u2, begin, timeframe, blocklen):
                 stopframe=H_atoms.atoms.coordinates()
                 tmpsum+=msd_win(lenH, startframe, stopframe)
                 begin+=1
-            tmpsum/=float(blocklen-timeframe+1)    
+            tmpsum/=float(blocklen-timeframe+1)
             listi[item]=tmpsum
-        msd_bl[0]+=listi['inner']
-        msd_bl[1]+=listi['middle']
-        msd_bl[2]+=listi['outer']
-    msd_bl[0]/=float(len(selection))
-    msd_bl[1]/=float(len(selection))
-    msd_bl[2]/=float(len(selection))
-    open("250_inner.dat", 'a').write("%s\n" %(msd_bl[0]))
-    open("250_middle.dat", 'a').write("%s\n" %(msd_bl[1]))
-    open("250_outer.dat", 'a').write("%s\n" %(msd_bl[2]))
+            if item == 'inner':
+               msd_bl[0]+=listi['inner']
+               #open("{0}_inner.dat".format(i), 'a').write("%s\n" %(listi['inner']))
+               msd_bl_weighted_average[0]+=len(H_atoms)*listi['inner']
+            if item == 'middle':
+               msd_bl[1]+=listi['middle']
+               #open("{0}_middle.dat".format(i), 'a').write("%s\n" %(listi['middle']))
+               msd_bl_weighted_average[1]+=len(H_atoms)*listi['middle']
+            if item == 'outer':
+               msd_bl[2]+=listi['outer']
+               #open("{0}_outer.dat".format(i), 'a').write("%s\n" %(listi['outer']))
+               msd_bl_weighted_average[2]+=len(H_atoms)*listi['outer']
+    msd_bl_weighted_average[0]/=float(layercounter[0])
+    msd_bl_weighted_average[1]/=float(layercounter[1])
+    msd_bl_weighted_average[2]/=float(layercounter[2])
+    open("250_inner.dat", 'a').write("%s\n" %(msd_bl_weighted_average[0]))
+    open("250_middle.dat", 'a').write("%s\n" %(msd_bl_weighted_average[1]))
+    open("250_outer.dat", 'a').write("%s\n" %(msd_bl_weighted_average[2]))
 
 
-def select_layers(u1, u2, i="A"):
+def select_layers(u1, u2, i):
     
     segment=u1.selectAtoms("segid %s" %(i))
     hy=segment.selectAtoms("name H*")
@@ -121,13 +129,10 @@ def select_layers(u1, u2, i="A"):
         
 
 
-    print len(inner_selection)
     inner_selection=tuple(inner_selection)
     
-    print len(middle_selection)
     middle_selection=tuple(middle_selection)
     
-    print len(outer_selection)
     outer_selection=tuple(outer_selection)
 
     dicsel={}
@@ -136,11 +141,28 @@ def select_layers(u1, u2, i="A"):
     dicsel['outer']=outer_selection
     return dicsel
 
+def layer_counter(selection, u1, u2):
+    nrofinnerH = 0
+    nrofmiddleH = 0
+    nrofouterH = 0
+    for i in selection:
+        dicsel={}
+        segment=u2.selectAtoms("segid %s" %(i))
+        ref=u1.selectAtoms("segid %s" %(i))
+        hy=segment.selectAtoms("name H*")
+        car=segment.selectAtoms("name C*")
+        ns_hy=NS.AtomNeighborSearch(hy)
+        allH_atoms=ns_hy.search_list(car, 1.5)
+        dicsel=select_layers(u1, u2, "%s" %(i))
+	nrofinnerH += len(dicsel['inner'])
+        nrofmiddleH += len(dicsel['middle'])
+        nrofouterH += len(dicsel['outer'])	
+    return nrofinnerH, nrofmiddleH, nrofouterH
 
 def main():
-    pdb="2lym_dis_run.pdb"
-    psf="2lym_dis_run.psf"
-    dcd="shortest.dcd"
+    pdb="unwrapped_disulfide_run.pdb"
+    psf="unwrapped_disulfide_run.psf"
+    dcd="powder_shortest.dcd"
     u1 = MDAnalysis.Universe(pdb)
     u2 = MDAnalysis.Universe(psf, dcd)
     #timeframe=300
@@ -149,7 +171,7 @@ def main():
     timeframe=3
     begin=0
     blocklen=5
-    selection=['A']
+    selection=['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
     ###### vmd selector_conversions:
 
     #str_inner=''
@@ -170,10 +192,10 @@ def main():
     #print 'str_inner', str_inner
     #print 'str_middle', str_middle
     #print 'str_outer', str_outer
-
+    layercounter=layer_counter(selection, u1, u2)
     for i in range(0, len(u2.trajectory)/blocklen*blocklen, blocklen):
         begin=i
-        msd_block(selection, u1, u2, begin, timeframe, blocklen)
+        msd_block(selection, u1, u2, begin, timeframe, blocklen, layercounter)
 
 if __name__ == '__main__':
     main()

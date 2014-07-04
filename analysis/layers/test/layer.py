@@ -19,7 +19,6 @@ def msd_block(selection, u1, u2, begin, timeframe, blocklen, layercounter):
     tmpbegin=begin
     for i in selection:
         listi={}
-        print i
         dicsel=select_layers(u1, u2, "%s" %(i))
         for item in dicsel:
             tmpsum=0
@@ -32,7 +31,6 @@ def msd_block(selection, u1, u2, begin, timeframe, blocklen, layercounter):
             allH_atoms=ns_hy.search_list(car, 1.5)
             H_atoms=allH_atoms.selectAtoms(*dicsel[item])
             lenH=len(H_atoms)
-            #print lenH
             for ts in u2.trajectory[begin:begin+blocklen-timeframe+1]:         #u2.trajectory[0,3]: means 0, 1, 2 --> last one doesn't count!
                 u2.trajectory[begin]
                 AL.alignto(segment, ref, select="name CA")
@@ -43,31 +41,22 @@ def msd_block(selection, u1, u2, begin, timeframe, blocklen, layercounter):
                 tmpsum+=msd_win(lenH, startframe, stopframe)
                 begin+=1
             tmpsum/=float(blocklen-timeframe+1)
-            #open("all_layer.dat", 'a').write("%s\n" %(tmpsum))
             listi[item]=tmpsum
-            print i, item, len(H_atoms)
             if item == 'inner':
                msd_bl[0]+=listi['inner']
-               open("{0}_inner.dat".format(i), 'a').write("%s\n" %(listi['inner']))
+               #open("{0}_inner.dat".format(i), 'a').write("%s\n" %(listi['inner']))
                msd_bl_weighted_average[0]+=len(H_atoms)*listi['inner']
-               print 'sad pribraja na inner ovoliko', len(H_atoms)*listi['inner']
             if item == 'middle':
                msd_bl[1]+=listi['middle']
-               open("{0}_middle.dat".format(i), 'a').write("%s\n" %(listi['middle']))
+               #open("{0}_middle.dat".format(i), 'a').write("%s\n" %(listi['middle']))
                msd_bl_weighted_average[1]+=len(H_atoms)*listi['middle']
-               print 'sad pribraja na middle ovoliko', len(H_atoms)*listi['middle']
             if item == 'outer':
                msd_bl[2]+=listi['outer']
-               open("{0}_outer.dat".format(i), 'a').write("%s\n" %(listi['outer']))
+               #open("{0}_outer.dat".format(i), 'a').write("%s\n" %(listi['outer']))
                msd_bl_weighted_average[2]+=len(H_atoms)*listi['outer']
-               print 'sad pribraja na outer ovoliko', len(H_atoms)*listi['outer']
-    print layercounter[0], layercounter[1], layercounter[2]
     msd_bl_weighted_average[0]/=float(layercounter[0])
     msd_bl_weighted_average[1]/=float(layercounter[1])
     msd_bl_weighted_average[2]/=float(layercounter[2])
-    #msd_bl[0]/=float(len(selection))
-    #msd_bl[1]/=float(len(selection))
-    #msd_bl[2]/=float(len(selection))
     open("250_inner.dat", 'a').write("%s\n" %(msd_bl_weighted_average[0]))
     open("250_middle.dat", 'a').write("%s\n" %(msd_bl_weighted_average[1]))
     open("250_outer.dat", 'a').write("%s\n" %(msd_bl_weighted_average[2]))
@@ -140,13 +129,10 @@ def select_layers(u1, u2, i):
         
 
 
-    print len(inner_selection)
     inner_selection=tuple(inner_selection)
     
-    print len(middle_selection)
     middle_selection=tuple(middle_selection)
     
-    print len(outer_selection)
     outer_selection=tuple(outer_selection)
 
     dicsel={}
